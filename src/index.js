@@ -34,9 +34,10 @@ const run = async () => {
         else console.info('Delete all valid tags until tag', until.name);
 
         const toDelete = getTagsToDelete(tags, until);
-        console.info('Tags to delete:\n\t', toDelete.join('\n\t'));
+        console.info('Tags to delete:\n', toDelete.join('\n '));
 
         await deleteTags(toDelete);
+        console.info('Tags deleted');
     }
     catch (error) {
         setFailed(error.message);
