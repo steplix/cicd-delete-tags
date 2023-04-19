@@ -42,7 +42,7 @@ exports.getRepoTags = async () => {
 exports.getBranchTags = async () => {
     await fetchTags();
 
-    const tags = await getExecOutput('git', ['tag', '--sort', '-creatordate', '--no-column', '--merged'], { cwd: '.' });
+    const tags = await getExecOutput('git', ['tag', '--no-column', '--sort=-creatordate', '--merged'], { cwd: '.' });
     if (tags.exitCode !== 0) {
         console.log(tags.stderr);
         process.exit(tags.exitCode);
