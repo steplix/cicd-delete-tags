@@ -1,0 +1,31 @@
+{
+  "name": "cicd-delete-tags",
+  "version": "1.0.0",
+  "description": "Delete all valid tags until specific tag",
+  "main": "src/index.js",
+  "scripts": {
+    "lint": "eslint",
+    "prepare": "ncc build src/index.js -o dist --source-map --license LICENSE"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/steplix/cicd-delete-tags.git"
+  },
+  "bugs": {
+    "url": "https://github.com/steplix/cicd-delete-tags/issues"
+  },
+  "homepage": "https://github.com/steplix/cicd-delete-tags#readme",
+  "keywords": [],
+  "author": "Steplix",
+  "license": "MIT",
+  "dependencies": {
+    "@actions/core": "^1.10.0",
+    "@actions/exec": "^1.1.1",
+    "@actions/github": "^5.1.1"
+  },
+  "devDependencies": {
+    "@vercel/ncc": "^0.36.1",
+    "eslint": "^8.38.0",
+    "eslint-config-standard": "^17.0.0"
+  }
+}

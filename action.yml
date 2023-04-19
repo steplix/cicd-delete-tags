@@ -1,0 +1,26 @@
+name: 'Delete tags'
+
+inputs:
+  GITHUB_TOKEN:
+    description: 'Token to use to push to the repo. Pass in using `secrets.GITHUB_TOKEN`'
+    required: true
+  TAG_REGEX:
+    description: 'Version prefix used to create tag, Example: test-\d*'
+    required: true
+  UNTIL:
+    description: 'Delete all tags with regex match until this specific tag, this tag is not included'
+    required: false
+  PR_BASE_BRANCH:
+    description: 'Base branch to get last PR base branch and delete until the base branch, base not included'
+    required: false
+  PER_BRANCH:
+    description: 'If specified, only tags merged to the same branch will be considered. Useful for maintenance branches. Note: this requires fetching the history when checking out'
+    required: false
+    default: false
+
+runs:
+  using: 'node16'
+  main: 'dist/index.js'
+branding:
+  icon: 'tag'
+  color: 'purple'
