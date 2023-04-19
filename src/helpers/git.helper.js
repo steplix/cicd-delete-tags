@@ -21,19 +21,17 @@ exports.getRepoTags = async () => {
         ref: 'tags/'
     });
 
-    console.log(tags);
-
     const tagsWithDate = [];
 
     for (const tag of tags) {
-        const response = await octokit.rest.git.getTag({
+        const response = await octokit.rest.git.getCommit({
             ...context.repo,
-            tag_sha: tag.object.sha
+            commit_sha: tag.object.sha
         });
 
         tagsWithDate.push({
-            name: response.data.tag,
-            date: new Date(response.data.tagger.date)
+            name: tag.ref.replace(/^refs\/tags\//g, ''),
+            date: new Date(response.data.committer.date)
         });
     }
 
@@ -50,14 +48,14 @@ exports.getTagInfo = async (tag) => {
     }
 
     const octokit = getOctokit(githubToken);
-    const response = await octokit.rest.git.getTag({
+    const response = await octokit.rest.git.getCommit({
         ...context.repo,
-        tag_sha: tagSha.stdout
+        commit_sha: tagSha.stdout
     });
 
     return {
-        name: response.data.tag,
-        date: new Date(response.data.tagger.date)
+        name: tag,
+        date: new Date(response.data.committer.date)
     };
 };
 
