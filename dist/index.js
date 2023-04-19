@@ -10899,12 +10899,10 @@ exports.getTagInfo = async (tag) => {
         process.exit(tagSha.exitCode);
     }
 
-    console.log(`Searching tag sha ${tagSha.stdout}`);
-
     const octokit = getOctokit(githubToken);
     const response = await octokit.rest.git.getCommit({
         ...context.repo,
-        commit_sha: tagSha.stdout
+        commit_sha: tagSha.stdout.trim()
     });
 
     return {
