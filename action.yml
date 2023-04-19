@@ -13,10 +13,6 @@ inputs:
   PR_BASE_BRANCH:
     description: 'Base branch to get last PR base branch and delete until the base branch, base not included'
     required: false
-  PER_BRANCH:
-    description: 'If specified, only tags merged to the same branch will be considered. Useful for maintenance branches. Note: this requires fetching the history when checking out'
-    required: false
-    default: false
 
 runs:
   using: 'node16'

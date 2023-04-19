@@ -10883,43 +10883,70 @@ exports.getRepoTags = async () => {
         });
     }
 
-    const sorted = tagsWithDate.sort((a, b) => b.date - a.date);
-    return sorted.map(t => t.name);
+    return tagsWithDate.sort((a, b) => b.date - a.date);
 };
 
-exports.getBranchTags = async () => {
+exports.getTagInfo = async (tag) => {
     await fetchTags();
 
-    const tags = await getExecOutput('git', ['tag', '--no-column', '--sort=-creatordate', '--merged'], { cwd: '.' });
-    if (tags.exitCode !== 0) {
-        console.log(tags.stderr);
-        process.exit(tags.exitCode);
+    const tagSha = await getExecOutput('git', ['rev-list', '-1', tag], { cwd: '.' });
+    if (tagSha.exitCode !== 0) {
+        console.log(tagSha.stderr);
+        process.exit(tagSha.exitCode);
     }
 
-    return tags.stdout.split('\n');
-};
-
-exports.getLastPullRequest = async (base) => {
     const octokit = getOctokit(githubToken);
-
-    const { data: prs } = await octokit.rest.pulls.list({
+    const response = await octokit.rest.git.getTag({
         ...context.repo,
-        state: 'closed',
-        base,
-        direction: 'desc',
-        per_page: 1,
-        sort: 'created'
+        tag_sha: tagSha.stdout
     });
 
-    return prs[0] || {};
+    return {
+        name: response.data.tag,
+        date: new Date(response.data.tagger.date)
+    };
+};
+
+exports.getLastPullRequestMerged = async (base) => {
+    const octokit = getOctokit(githubToken);
+
+    const getPrs = (page) => {
+        return octokit.rest.pulls.list({
+            ...context.repo,
+            state: 'closed',
+            base,
+            direction: 'desc',
+            page,
+            sort: 'created'
+        });
+    };
+
+    let prMerged;
+    let page = 1;
+    let more = true;
+
+    while (more) {
+        const response = await getPrs(++page);
+
+        // Are more pages
+        more = response.status === 200 && response.data.length > 0;
+
+        for (const pr of response.data) {
+            if (pr.merged_at) {
+                prMerged = pr;
+                more = false;
+                break;
+            }
+        }
+    }
+
+    return prMerged;
 };
 
 exports.deleteTags = async (tags) => {
     const octokit = getOctokit(githubToken);
 
     for (const tag of tags) {
-        console.log(`Deleting tag ${tag}`);
-
         const ref = `tags/${tag}`;
         await octokit.rest.git.deleteRef({
             ...context.repo,
@@ -11133,32 +11160,42 @@ var __webpack_exports__ = {};
 // This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
 (() => {
 const { getInput, setFailed } = __nccwpck_require__(2186);
-const { deleteTags, getRepoTags, getBranchTags, getLastPullRequest } = __nccwpck_require__(9419);
+const { deleteTags, getRepoTags, getLastPullRequestMerged, getTagInfo } = __nccwpck_require__(9419);
 
 const validTag = getInput('TAG_REGEX');
-const tagUntil = getInput('UNTIL');
+const tag = getInput('UNTIL');
 const prBaseBranch = getInput('PR_BASE_BRANCH');
-const perBranch = getInput('PER_BRANCH');
 
 const tagRegex = new RegExp(validTag, 'g');
 
 const run = async () => {
     try {
-        if (!tagUntil && !prBaseBranch) return setFailed('Please set UNTIL or PR_BASE_BRANCH parameters');
+        if (!tag && !prBaseBranch) return setFailed('Please set UNTIL or PR_BASE_BRANCH parameters');
 
         const tags = await getTags();
+        if (tags.length <= 0) return console.info('No tag found');
+
         let until;
 
-        if (isValidTag(tagUntil)) until = tagUntil;
+        if (isValidTag(tag)) until = await getTagInfo(tag);
         else {
-            const lastPr = await getLastPullRequest(prBaseBranch);
-            const tag = isValidTag(lastPr.head) ? lastPr.head : '';
-            until = tag;
+            const lastPr = await getLastPullRequestMerged(prBaseBranch);
+            if (!lastPr) return console.info('No PR found');
+
+            const tag = isValidTag(lastPr.head.ref) ? await getTagInfo(lastPr.head.ref) : '';
+            until = {
+                name: tag ? tag.name : '',
+                date: tag ? tag.date : new Date(lastPr.created_at)
+            };
         }
 
-        console.log('Delete all tags until tag', until);
+        if (until.name !== '' && !until) return console.info('Not until tag found');
+
+        if (until.name === '') console.info('Delete all valid tags');
+        else console.info('Delete all valid tags until tag', until);
+
         const toDelete = getTagsToDelete(tags, until);
-        console.log('tags to delete:\n', toDelete.join('\n'));
+        console.info('Tags deleted:\n', toDelete.join('\n\t'));
 
         await deleteTags(toDelete);
     }
@@ -11172,20 +11209,32 @@ const isValidTag = (tag) => {
 };
 
 const getTags = async () => {
-    console.log(`Getting list of tags from ${perBranch === 'true' ? 'branch' : 'repository'}`);
+    console.info('Getting list of tags from repository');
 
-    const tags = perBranch === 'true' ? await getBranchTags() : await getRepoTags();
+    const tags = await getRepoTags();
     return tags
         .filter(tag => isValidTag(tag));
 };
 
 const getTagsToDelete = (tags, until) => {
     const toDelete = [];
-    for (const tag of tags) {
-        if (until !== '' && tag === until) break;
-        if (!isValidTag(tag)) continue;
+    const sorted = tags.sort((a, b) => b - a);
+
+    for (const tag of sorted) {
+        if (!isValidTag(tag.name)) continue;
+
+        // if pr is merged to branch and not to a tag, delete all tags until this merged date
+        if (until.name === '' && tag.date < until.date) {
+            toDelete.push(tag);
+            continue;
+        }
+
+        if (tag.name === until.name) break;
         toDelete.push(tag);
     };
+
+    // Don't delete the last tag when merge to branch and not to tag
+    if (until.name === '') toDelete.shift();
 
     return toDelete;
 };

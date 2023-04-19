@@ -35,43 +35,70 @@ exports.getRepoTags = async () => {
         });
     }
 
-    const sorted = tagsWithDate.sort((a, b) => b.date - a.date);
-    return sorted.map(t => t.name);
+    return tagsWithDate.sort((a, b) => b.date - a.date);
 };
 
-exports.getBranchTags = async () => {
+exports.getTagInfo = async (tag) => {
     await fetchTags();
 
-    const tags = await getExecOutput('git', ['tag', '--no-column', '--sort=-creatordate', '--merged'], { cwd: '.' });
-    if (tags.exitCode !== 0) {
-        console.log(tags.stderr);
-        process.exit(tags.exitCode);
+    const tagSha = await getExecOutput('git', ['rev-list', '-1', tag], { cwd: '.' });
+    if (tagSha.exitCode !== 0) {
+        console.log(tagSha.stderr);
+        process.exit(tagSha.exitCode);
     }
 
-    return tags.stdout.split('\n');
-};
-
-exports.getLastPullRequest = async (base) => {
     const octokit = getOctokit(githubToken);
-
-    const { data: prs } = await octokit.rest.pulls.list({
+    const response = await octokit.rest.git.getTag({
         ...context.repo,
-        state: 'closed',
-        base,
-        direction: 'desc',
-        per_page: 1,
-        sort: 'created'
+        tag_sha: tagSha.stdout
     });
 
-    return prs[0] || {};
+    return {
+        name: response.data.tag,
+        date: new Date(response.data.tagger.date)
+    };
+};
+
+exports.getLastPullRequestMerged = async (base) => {
+    const octokit = getOctokit(githubToken);
+
+    const getPrs = (page) => {
+        return octokit.rest.pulls.list({
+            ...context.repo,
+            state: 'closed',
+            base,
+            direction: 'desc',
+            page,
+            sort: 'created'
+        });
+    };
+
+    let prMerged;
+    let page = 1;
+    let more = true;
+
+    while (more) {
+        const response = await getPrs(++page);
+
+        // Are more pages
+        more = response.status === 200 && response.data.length > 0;
+
+        for (const pr of response.data) {
+            if (pr.merged_at) {
+                prMerged = pr;
+                more = false;
+                break;
+            }
+        }
+    }
+
+    return prMerged;
 };
 
 exports.deleteTags = async (tags) => {
     const octokit = getOctokit(githubToken);
 
     for (const tag of tags) {
-        console.log(`Deleting tag ${tag}`);
-
         const ref = `tags/${tag}`;
         await octokit.rest.git.deleteRef({
             ...context.repo,

@@ -42,15 +42,6 @@ with:
     PR_BASE_BRANCH: staging
 ```
 
-#### `PER_BRANCH`
-
-If specified, only tags merged to the same branch will be considered. Useful for maintenance branches. Note: this requires fetching the history when checking out:
-
-``` yaml
-with:
-    PER_BRANCH: testing
-```
-
 ### Important
 
 PR_BASE_BRANCH or UNTIL is needed, if both setted UNTIL parameter is more important.
