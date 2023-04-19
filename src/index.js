@@ -51,8 +51,11 @@ const getTags = async () => {
     console.info('Getting list of tags from repository');
 
     const tags = await getRepoTags();
-    return tags
-        .filter(tag => isValidTag(tag));
+    const filtered = tags.filter(tag => isValidTag(tag));
+
+    console.log(`Filter invalid tags, and getting ${filtered.length} tags`);
+
+    return filtered;
 };
 
 const getTagsToDelete = (tags, until) => {

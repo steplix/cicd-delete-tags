@@ -10869,6 +10869,8 @@ exports.getRepoTags = async () => {
         ref: 'tags/'
     });
 
+    console.log(`Getting ${tags.length} tags`);
+
     const tagsWithDate = [];
 
     for (const tag of tags) {
@@ -10882,6 +10884,8 @@ exports.getRepoTags = async () => {
             date: new Date(response.data.committer.date)
         });
     }
+
+    console.log(`Adding date to ${tagsWithDate.length} tags`);
 
     return tagsWithDate.sort((a, b) => b.date - a.date);
 };
@@ -11212,8 +11216,11 @@ const getTags = async () => {
     console.info('Getting list of tags from repository');
 
     const tags = await getRepoTags();
-    return tags
-        .filter(tag => isValidTag(tag));
+    const filtered = tags.filter(tag => isValidTag(tag));
+
+    console.log(`Filter invalid tags, and getting ${filtered.length} tags`);
+
+    return filtered;
 };
 
 const getTagsToDelete = (tags, until) => {

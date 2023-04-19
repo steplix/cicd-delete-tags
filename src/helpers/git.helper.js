@@ -21,6 +21,8 @@ exports.getRepoTags = async () => {
         ref: 'tags/'
     });
 
+    console.log(`Getting ${tags.length} tags`);
+
     const tagsWithDate = [];
 
     for (const tag of tags) {
@@ -34,6 +36,8 @@ exports.getRepoTags = async () => {
             date: new Date(response.data.committer.date)
         });
     }
+
+    console.log(`Adding date to ${tagsWithDate.length} tags`);
 
     return tagsWithDate.sort((a, b) => b.date - a.date);
 };
