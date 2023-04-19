@@ -21,6 +21,8 @@ exports.getRepoTags = async () => {
         ref: 'tags/'
     });
 
+    console.log(tags);
+
     const tagsWithDate = [];
 
     for (const tag of tags) {
