@@ -31,10 +31,10 @@ const run = async () => {
         if (until.name !== '' && !until) return console.info('Not until tag found');
 
         if (until.name === '') console.info('Delete all valid tags');
-        else console.info('Delete all valid tags until tag', until);
+        else console.info('Delete all valid tags until tag', until.name);
 
         const toDelete = getTagsToDelete(tags, until);
-        console.info('Tags deleted:\n', toDelete.join('\n\t'));
+        console.info('Tags to delete:\n\t', toDelete.join('\n\t'));
 
         await deleteTags(toDelete);
     }
@@ -83,7 +83,7 @@ const getTagsToDelete = (tags, until) => {
     // Don't delete the last tag when merge to branch and not to tag
     if (until.name === '') toDelete.shift();
 
-    return toDelete;
+    return toDelete.map(tag => tag.name);
 };
 
 run();
