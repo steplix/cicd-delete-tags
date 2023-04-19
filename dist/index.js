@@ -11209,7 +11209,7 @@ const run = async () => {
 };
 
 const isValidTag = (tag) => {
-    const match = ''.match(tagRegex);
+    const match = tag.match(tagRegex);
     if (!match) return false;
     if (match.length !== 1) return false;
     return match[0] === tag;
