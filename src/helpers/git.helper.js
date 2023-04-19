@@ -39,8 +39,6 @@ exports.getRepoTags = async () => {
 
     console.log(`Adding date to ${tagsWithDate.length} tags`);
 
-    console.log(tagsWithDate);
-
     return tagsWithDate.sort((a, b) => b.date - a.date);
 };
 

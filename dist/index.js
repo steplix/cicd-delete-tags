@@ -10887,8 +10887,6 @@ exports.getRepoTags = async () => {
 
     console.log(`Adding date to ${tagsWithDate.length} tags`);
 
-    console.log(tagsWithDate);
-
     return tagsWithDate.sort((a, b) => b.date - a.date);
 };
 
@@ -11223,7 +11221,7 @@ const getTags = async () => {
     console.info('Getting list of tags from repository');
 
     const tags = await getRepoTags();
-    const filtered = tags.filter(tag => isValidTag(tag));
+    const filtered = tags.filter(tag => isValidTag(tag.name));
 
     console.log(`Filter invalid tags, and getting ${filtered.length} tags`);
 

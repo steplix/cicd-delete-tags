@@ -56,7 +56,7 @@ const getTags = async () => {
     console.info('Getting list of tags from repository');
 
     const tags = await getRepoTags();
-    const filtered = tags.filter(tag => isValidTag(tag));
+    const filtered = tags.filter(tag => isValidTag(tag.name));
 
     console.log(`Filter invalid tags, and getting ${filtered.length} tags`);
 
