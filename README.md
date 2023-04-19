@@ -21,8 +21,17 @@ Regex to validate tags:
 
 ``` yaml
 with:
-    TAG_REGEX: test-\d*
+    TAG_REGEX: test-\\d*
 ```
+
+> Important:
+> If the patter have the symbol '\\', please cap this with another '\\'.
+>
+> Example
+>
+> ----------------
+> ERROR: `test-\d*` \
+> OK: `test-\\d*`
 
 #### `UNTIL`
 
@@ -57,5 +66,5 @@ jobs:
         uses: steplix/cicd-delete-tags@v1
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG_REGEX: test-\d*
+          TAG_REGEX: test-\\d*
 ```
