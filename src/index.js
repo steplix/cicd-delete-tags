@@ -44,6 +44,8 @@ const run = async () => {
 };
 
 const isValidTag = (tag) => {
+    if (!tag) return false;
+    if (typeof tag !== 'string') return false;
     const match = tag.match(tagRegex);
     if (!match) return false;
     if (match.length !== 1) return false;
