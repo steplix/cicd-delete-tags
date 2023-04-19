@@ -9,6 +9,8 @@ const tagRegex = new RegExp(validTag, 'g');
 
 const run = async () => {
     try {
+        console.log('Regex', tagRegex);
+
         if (!tag && !prBaseBranch) return setFailed('Please set UNTIL or PR_BASE_BRANCH parameters');
 
         const tags = await getTags();
