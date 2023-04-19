@@ -10887,6 +10887,8 @@ exports.getRepoTags = async () => {
 
     console.log(`Adding date to ${tagsWithDate.length} tags`);
 
+    console.log(tagsWithDate);
+
     return tagsWithDate.sort((a, b) => b.date - a.date);
 };
 
@@ -11174,8 +11176,6 @@ const tagRegex = new RegExp(validTag, 'g');
 
 const run = async () => {
     try {
-        console.log('Regex', tagRegex);
-
         if (!tag && !prBaseBranch) return setFailed('Please set UNTIL or PR_BASE_BRANCH parameters');
 
         const tags = await getTags();
